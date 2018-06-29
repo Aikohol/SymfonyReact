@@ -5,67 +5,87 @@ namespace App\Entity;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * @ORM\Entity(repositoryClass="App\Repository\ArticlesRepository")
- */
+* @ORM\Entity(repositoryClass="App\Repository\ArticlesRepository")
+*/
 class Articles
 {
-    /**
-     * @ORM\Id()
-     * @ORM\GeneratedValue()
-     * @ORM\Column(type="integer")
-     */
-    private $id;
-
-    public function getId()
-    {
-        return $this->id;
-    }
+	/**
+	* @ORM\Id()
+	* @ORM\GeneratedValue()
+	* @ORM\Column(type="integer")
+	*/
+	private $id;
 
 	/**
-	*@ORM\Column(type="string")
-	**/
+	* @ORM\Column(type="string", length=255)
+	*/
 	private $name;
 
 	/**
-	*@return mixed
-	**/
+	* @ORM\Column(type="text")
+	*/
+	private $content;
 
-	public function getName()
+	/**
+	* @ORM\Column(type="string", length=255)
+	*/
+	private $image;
+
+	/**
+	* @ORM\Column(type="datetime")
+	*/
+	private $createdAt;
+
+	public function getId()
+	{
+		return $this->id;
+	}
+
+	public function getName(): ?string
 	{
 		return $this->name;
 	}
 
-	/**
-	*@param mixed $name
-	**/
-
-	public function setName($name) : void
+	public function setName(string $name): self
 	{
 		$this->name = $name;
+
+		return $this;
 	}
 
-	/**
-	*@ORM\Column(type="text")
-	**/
-
-	private $description;
-
-	/**
-	*@return mixed
-	**/
-
-	public function getDescription()
+	public function getContent(): ?string
 	{
-		return $this->description;
+		return $this->content;
 	}
 
-	/**
-	*@param mixed $description
-	**/
-
-	public function setDescription($description) : void
+	public function setContent(string $content): self
 	{
-		$this->description = $description;
+		$this->content = $content;
+
+		return $this;
 	}
 
+	public function getImage(): ?string
+	{
+		return $this->image;
+	}
+
+	public function setImage(string $image): self
+	{
+		$this->image = $image;
+
+		return $this;
+	}
+
+	public function getCreatedAt(): ?\DateTimeInterface
+	{
+		return $this->createdAt;
+	}
+
+	public function setCreatedAt(\DateTimeInterface $createdAt): self
+	{
+		$this->createdAt = $createdAt;
+
+		return $this;
+	}
 }
