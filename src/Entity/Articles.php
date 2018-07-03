@@ -2,6 +2,8 @@
 
 namespace App\Entity;
 
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as Serializer;
 
@@ -14,6 +16,7 @@ class Articles
 {
 	public function __construct() {
 		$this->createdAt = new \DateTime();
+		$this->images = new ArrayCollection();
 	}
 	/**
 	* @ORM\Id()
@@ -36,16 +39,16 @@ class Articles
 	private $content;
 
 	/**
-	* @ORM\Column(type="string", length=255)
-	* @Serializer\Groups({"detail", "list"})
-	*/
-	private $image;
-
-	/**
 	* @ORM\Column(type="datetime")
 	* @Serializer\Groups({"detail", "list"})
 	*/
 	private $createdAt;
+
+	/**
+	* @ORM\OneToMany(targetEntity="App\Entity\Images", mappedBy="article", orphanRemoval=true)
+	* @Serializer\Groups({"detail", "list"})
+	*/
+	private $images;
 
 
 	public function getId()
@@ -77,18 +80,6 @@ class Articles
 		return $this;
 	}
 
-	public function getImage(): ?string
-	{
-		return $this->image;
-	}
-
-	public function setImage(string $image): self
-	{
-		$this->image = $image;
-
-		return $this;
-	}
-
 	public function getCreatedAt(): ?\DateTimeInterface
 	{
 		return $this->createdAt;
@@ -97,6 +88,37 @@ class Articles
 	public function setCreatedAt(\DateTimeInterface $createdAt): self
 	{
 		$this->createdAt = $createdAt;
+
+		return $this;
+	}
+
+	/**
+	* @return Collection|Images[]
+	*/
+	public function getImages(): Collection
+	{
+		return $this->images;
+	}
+
+	public function addImage(Images $image): self
+	{
+		if (!$this->images->contains($image)) {
+			$this->images[] = $image;
+			$image->setArticle($this);
+		}
+
+		return $this;
+	}
+
+	public function removeImage(Images $image): self
+	{
+		if ($this->images->contains($image)) {
+			$this->images->removeElement($image);
+			// set the owning side to null (unless already changed)
+			if ($image->getArticle() === $this) {
+				$image->setArticle(null);
+			}
+		}
 
 		return $this;
 	}

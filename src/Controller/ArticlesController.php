@@ -10,6 +10,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use JMS\Serializer\SerializationContext;
 use App\Entity\Articles;
+use App\Entity\Images;
 use App\Repository\ArticlesRepository;
 
 class ArticlesController extends Controller
@@ -40,10 +41,10 @@ class ArticlesController extends Controller
 	public function home() {
 		return $this->render('articles/home.html.twig');
 	}
-	/**
-	* @Route("/articles/{id}", name="articles_show")
-	**/
 
+	/**
+	* @Route("/articles/{id}", requirements={"id" = "\d+"}, name="articles_show")
+	**/
 	public function show(Articles $article) {
 		$data = $this->get('jms_serializer')->serialize($article, 'json',
 		SerializationContext::create()->setGroups(['detail']));
@@ -58,7 +59,7 @@ class ArticlesController extends Controller
 	}
 
 	/**
-	* @Route("/articles_create")
+	* @Route("/articles/new")
 	* @Method("POST")
 	**/
 	public function new(Request $request) {
@@ -66,12 +67,21 @@ class ArticlesController extends Controller
 
 		$data = $request->getContent();
 		$data = json_decode($data);
-
 		$manager = $this->getDoctrine()->getManager();
 
-		foreach($data as $key => $value) {
+		foreach($data->attributes as $key => $value) {
 			$set = 'set' . ucfirst($key);
 			$article->{$set}($value);
+		}
+		foreach($data->images as $key => $value) {
+			$image = new Images();
+			foreach($value as $key => $val)
+			{
+				$set = "set" . ucfirst($key);
+				$image->{$set}($val);
+			}
+			$manager->persist($image);
+			$article->addImage($image);
 		}
 		$manager->persist($article);
 
