@@ -12,6 +12,7 @@ use JMS\Serializer\SerializationContext;
 use App\Entity\Articles;
 use App\Entity\Images;
 use App\Repository\ArticlesRepository;
+use App\Repository\ImagesRepository;
 
 class ArticlesController extends Controller
 {
@@ -43,28 +44,11 @@ class ArticlesController extends Controller
 	}
 
 	/**
-	* @Route("/articles/{id}", requirements={"id" = "\d+"}, name="articles_show")
-	**/
-	public function show(Articles $article) {
-		$data = $this->get('jms_serializer')->serialize($article, 'json',
-		SerializationContext::create()->setGroups(['detail']));
-
-		$response = new Response($data);
-		$response->headers->set('Content-Type', 'application/json');
-
-		return $response;
-		return $this->render('articles/show.html.twig', [
-			'article' => $article,
-		]);
-	}
-
-	/**
-	* @Route("/articles/new")
+	* @Route("articles/new", name="home")
 	* @Method("POST")
 	**/
 	public function new(Request $request) {
 		$article = new Articles();
-
 		$data = $request->getContent();
 		$data = json_decode($data);
 		$manager = $this->getDoctrine()->getManager();
@@ -73,20 +57,54 @@ class ArticlesController extends Controller
 			$set = 'set' . ucfirst($key);
 			$article->{$set}($value);
 		}
-		foreach($data->images as $key => $value) {
-			$image = new Images();
-			foreach($value as $key => $val)
-			{
-				$set = "set" . ucfirst($key);
-				$image->{$set}($val);
-			}
-			$manager->persist($image);
-			$article->addImage($image);
-		}
 		$manager->persist($article);
-
 		$manager->flush();
 
-		return new Response('', Response::HTTP_CREATED);
+		$id = $article->getId();
+		return new Response($id, Response::HTTP_CREATED);
+	}
+
+	/**
+	* @Route("/articles/{id}", requirements={"id" = "\d+"}, name="articles_show")
+	**/
+	public function show(Articles $article) {
+		$data = $this->get('jms_serializer')->serialize($article, 'json',
+		SerializationContext::create()->setGroups(['detail']));
+		$response = new Response($data);
+		$response->headers->set('Content-Type', 'application/json');
+		$response->headers->set('Access-Control-Allow-Origin', '*');
+		return $response;
+	}
+
+	/**
+	* @Route("/articles/storeImages", name="articles_create")
+	* @Method("POST")
+	**/
+	public function storeImages(Request $request, ArticlesRepository $repo)
+	{
+		$data = $request->files;
+		$manager = $this->getDoctrine()->getManager();
+		$id = $request->request->get('article_id');
+
+		$article = $repo->find($id);
+		for($i = 0; $i < count($request->files); $i++)
+		{
+			$name = "file" . $i;
+			$ext = "." . $request->files->get($name)->getClientOriginalExtension();
+			$file = $request->files->get("file" . $i);
+			$path = "pictures/" . uniqid((string)(rand()*5)) . $ext;
+			move_uploaded_file($file ,$path);
+			$em = $this->getDoctrine()->getManager();
+			$image = new Images();
+			$image->setPath($path);
+			$manager->persist($image);
+			$article->addImage($image);
+			$manager->flush();
+		}
+		$manager->persist($article);
+		$manager->flush();
+
+		$response = new Response("OUIIII", Response::HTTP_CREATED);
+		return $response;
 	}
 }
